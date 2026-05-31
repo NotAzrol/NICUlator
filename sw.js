@@ -1,0 +1,35 @@
+const CACHE_NAME = 'nipulator-v1';
+
+// All files to cache for offline use
+const ASSETS = [
+  '/NIPUlator/',
+  '/NIPUlator/index.html',
+  '/NIPUlator/manifest.json',
+  '/NIPUlator/icon-192.png',
+  '/NIPUlator/icon-512.png'
+];
+
+// Install: cache everything
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
+  );
+  self.skipWaiting();
+});
+
+// Activate: clear old caches
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
+    )
+  );
+  self.clients.claim();
+});
+
+// Fetch: serve from cache, fall back to network
+self.addEventListener('fetch', event => {
+  event.respondWith(
+    caches.match(event.request).then(cached => cached || fetch(event.request))
+  );
+});
